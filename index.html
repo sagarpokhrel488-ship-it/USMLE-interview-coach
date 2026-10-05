@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Residency Interview Coach Pro</title>
+  <style>
+    :root {
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      --bg: #f6f7f9;
+      --card: #fff;
+      --tx: #1c2430;
+      --mu: #68758a;
+      --ac: #1f6feb;
+      --ok: #1a8f4c;
+      --warn: #d97706;
+      --bad: #c93b3b;
+      --bd: #dfe3ea;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root(:not([data-theme="light"])) {
+        --bg: #10151c;
+        --card: #19212c;
+        --tx: #e8edf5;
+        --mu: #93a1b5;
+        --ac: #5b9bff;
+        --ok: #4cc789;
+        --warn: #fbbf24;
+        --bad: #ff7b7b;
+        --bd: #2a3545;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #10151c;
+      --card: #19212c;
+      --tx: #e8edf5;
+      --mu: #93a1b5;
+      --ac: #5b9bff;
+      --ok: #4cc789;
+      --warn: #fbbf24;
+      --bad: #ff7b7b;
+      --bd: #2a3545;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--tx);
+      font: 16px/1.5 system-ui, -apple-system, sans-serif;
+    }
+
+    main { max-width: 640px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 22px; margin: 8px 0; }
+    h2 { font-size: 17px; margin: 18px 0 6px; }
+    
+    .card {
+      background: var(--card);
+      border: 1px solid var(--bd);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    .mu { color: var(--mu); font-size: 14px; }
+    label { display: block; font-weight: 600; margin: 12px 0 4px; font-size: 14px; }
+    select, textarea {
+      width: 100%; padding: 10px; border-radius: 10px;
+      border: 1px solid var(--bd); background: var(--bg); color: var(--tx); font: inherit;
+    }
+
+    button {
+      font: inherit; border: 0; border-radius: 12px; padding: 12px 18px;
+      background: var(--ac); color: #fff; font-weight: 600; cursor: pointer;
+    }
+    button.s { background: transparent; color: var(--ac); border: 1px solid var(--ac); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .av {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--ac);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex: none;
+    }
+    .who { display: flex; gap: 12px; align-items: center; }
+    .q { font-size: 18px; margin: 12px 0; font-style: italic; }
+    
+    .mic {
+      width: 84px; height: 84px; border-radius: 50%; font-size: 30px; padding: 0;
+      display: block; margin: 10px auto; transition: all 0.2s ease;
+    }
+    .mic.on { background: var(--bad); animation: pulse 1.5s infinite; }
+
+    .timer {
+      font-size: 20px; font-weight: 700; text-align: center; 
+      margin: 10px 0; color: var(--ok); transition: color 0.3s ease;
+    }
+    .timer.warning { color: var(--warn); }
+    .timer.critical { color: var(--bad); }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 6px; 
+      font-size: 12px; font-weight: bold; margin-right: 6px; margin-bottom: 4px;
+    }
+    .badge.ok { background: rgba(26,143,76,0.15); color: var(--ok); }
+    .badge.bad { background: rgba(201,59,59,0.15); color: var(--bad); }
+
+    .hidden { display: none !important; }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>Residency Coach Pro</h1>
+      <button class="s" style="padding: 6px 12px; font-size: 12px;" onclick="toggleTheme()">Theme</button>
+    </div>
+    
+    <!-- Setup Card -->
+    <div class="card" id="setup-card">
+      <h2>Session Settings</h2>
+      <label for="track-select">Choose Specialized Interview Track</label>
+      <select id="track-select">
+        <option value="im">Internal Medicine / Primary Care Track</option>
+        <option value="surgery">General Surgery & Procedural Track</option>
+        <option value="behavioral">High-Yield Behavioral (STAR Focused)</option>
+      </select>
+
+      <label for="context">Add Application Context (Optional)</label>
+      <textarea id="context" rows="3" placeholder="e.g., Mentioning a research year, complex medical history, or specific geographic ties..."></textarea>
+      
+      <div class="row">
+        <button id="start-btn" onclick="startInterview()">Start Mock Session</button>
+      </div>
+    </div>
+
+    <!-- Active Interview Card -->
+    <div class="card hidden" id="interview-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="who">
+          <div class="av">AI</div>
+          <div>
+            <strong id="interviewer-title">Interviewer</strong>
+            <div class="mu">Program Director</div>
+          </div>
+        </div>
+        <button class="s" id="input-toggle" style="padding: 4px 10px; font-size: 12px;" onclick="toggleInputMethod()">Use Keyboard</button>
+      </div>
+      
+      <p class="q" id="question-text">Loading question...</p>
+      
+      <div id="timer-display" class="timer hidden">00:00</div>
+      
+      <!-- Voice Input Panel -->
+      <div id="voice-panel">
+        <button class="mic" id="mic-btn" disabled onclick="toggleListening()">🎙️</button>
+        <p class="mu" id="status-text" style="text-align: center; margin-top: 4px;">Preparing audio...</p>
+      </div>
+
+      <!-- Text Fallback Panel -->
+      <div id="text-panel" class="hidden" style="margin-top: 15px;">
+        <label for="manual-response">Type your response:</label>
+        <textarea id="manual-response" rows="4" placeholder="Type here..." oninput="handleTextInput()"></textarea>
+      </div>
+
+      <!-- Live Transcript Rendering -->
+      <div style="margin-top: 15px; padding: 10px; background: var(--bg); border-radius: 8px;">
+        <div class="mu" style="font-weight:600; margin-bottom:4px;">Your Response Draft:</div>
+        <div id="transcript-text" style="font-size: 14px; min-height: 20px; color: var(--tx); white-space: pre-wrap;"></div>
+      </div>
+
+      <div class="row" style="justify-content: space-between; margin-top: 20px;">
+        <button class="s" onclick="endInterview()">End Session</button>
+        <button id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+      </div>
+    </div>
+
+    <!-- Feedback Analytics Report Card -->
+    <div class="card hidden" id="feedback-card">
+      <h2>Performance Evaluation</h2>
+      <p class="mu" id="feedback-meta"></p>
+      
+      <div id="feedback-list"></div>
+
+      <div class="row" style="margin-top: 20px; justify-content: space-between;">
+        <button class="s" onclick="restartSetup()">Start New Session</button>
+        <button id="download-btn" onclick="exportFeedbackMarkdown()">Export Report (.md)</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const root = document.documentElement;
+      root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+
+    // Comprehensive Custom Banks
+    const questionTracks = {
+      im: [
+        "Why are you drawn to Internal Medicine, and how do you handle complex diagnostic puzzles?",
+        "Describe a time you managed a heavy ward census under intense cognitive pressure.",
+        "How do you plan to incorporate evidence-based guidelines into your daily clinical workflows?"
+      ],
+      surgery: [
+        "What drives your passion for surgical training, and how do you handle rigorous procedural physical demands?",
+        "Walk me through a time when something went wrong in the operating room or sterile field. How did you react?",
+        "How do you handle conflict or breakdown of communication within an operative team under stress?"
+      ],
+      behavioral: [
+        "Tell me about a time you committed a clinical mistake or near-miss. How did you disclose it?",
+        "Describe a major conflict you faced with a senior resident or an attending physician.",
+        "Tell me about the most challenging patient relationship you have navigated so far."
+      ]
+    };
+
+    let currentQuestions = [];
+    let questionIndex = 0;
+    let isListening = false;
+    let useKeyboard = false;
+    let interviewSessionLog = [];
+
+    let timerInterval;
+    let secondsElapsed = 0;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
+    
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) finalTranscript += event.results[i].transcript;
+          else interimTranscript += event.results[i].transcript;
+        }
+        const activeText = finalTranscript + interimTranscript;
+        document.getElementById('transcript-text').innerText = activeText;
+        if(activeText.trim().length > 5) document.getElementById('next-btn').disabled = false;
+      };
+      recognition.onerror = () => stopListening();
+    }
+
+    function toggleInputMethod() {
+      useKeyboard = !useKeyboard;
+      stopListening();
+      
+      const voicePanel = document.getElementById('voice-panel');
+      const textPanel = document.getElementById('text-panel');
+      const toggleBtn = document.getElementById('input-toggle');
+
+      if (useKeyboard) {
+        voicePanel.classList.add('hidden');
+        textPanel.classList.remove('hidden');
+        toggleBtn.innerText = "Use Voice";
